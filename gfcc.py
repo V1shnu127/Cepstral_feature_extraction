@@ -4,8 +4,6 @@
 import os
 import numpy as np
 import librosa
-from spafe.features.mfcc import mfcc
-from spafe.features.lfcc import lfcc
 from spafe.features.gfcc import gfcc
 from scipy.io import savemat
 from tqdm import tqdm
@@ -19,8 +17,8 @@ from tqdm import tqdm
 #     return delta
 
 # ------------------ Settings ------------------
-base_dataset_dir = "/kaggle/input/segmented-bc2-ttv"       # Input the base directory
-save_base_dir = "/kaggle/working/gfcc_bc2_ttv"             # Input the output directory
+base_dataset_dir = "/kaggle/input/segmented-bc2-ttv-19-june-2025"
+save_base_dir = "/kaggle/working/gfcc_bc2_ttv_2"
 
 dataset_splits = {
     "train": "train",
@@ -28,8 +26,7 @@ dataset_splits = {
     "test": "test"
 }
 
-# Set this to "mfcc", "lfcc", or "gfcc"
-feature_type = "gfcc"  # Change as needed
+feature_type = "gfcc"
 
 # ------------------ Feature Extraction ------------------
 feature_extractors = {
@@ -50,19 +47,19 @@ for split_name, folder_name in dataset_splits.items():
 
     print(f"Processing {split_name.upper()} - Found {len(wav_files)} audio files.")
 
-    for file_path in tqdm(wav_files, desc=f"Extracting {feature_type.upper()} + deltas for {split_name.upper()}"):
+    for file_path in tqdm(wav_files, desc=f"Extracting {feature_type.upper()} for {split_name.upper()}"):
         try:
             sig, fs = librosa.load(file_path, sr=16000)
+            
+            # Skip files shorter than 0.01 seconds
+            if len(sig) / fs < 0.01:
+                print(f"Skipping {file_path}: Duration {len(sig)/fs} seconds is too short.")
+                with open("errors.log", "a") as log_file:
+                    log_file.write(f"Skipping {file_path}: Duration {len(sig)/fs} seconds is too short.\n")
+                continue
 
-            # Choose and extract base features (transpose to shape [features, time])
+            # Extract base features (remove win_len and win_hop for gfcc)
             base_feats = feature_extractors[feature_type](sig, fs=fs, num_ceps=20).T
-
-            # Compute delta and double-delta
-            #delta_feats = compute_deltas(base_feats, hlen=1)
-            #double_delta_feats = compute_deltas(delta_feats, hlen=1)
-
-            # Combine all
-            # combined_feats = np.vstack([base_feats, delta_feats, double_delta_feats])
 
             # Save path handling
             relative_path = os.path.relpath(file_path, base_folder)
@@ -77,5 +74,8 @@ for split_name, folder_name in dataset_splits.items():
 
         except Exception as e:
             print(f"Error processing {file_path}: {e}")
+            with open("errors.log", "a") as log_file:
+                log_file.write(f"Error processing {file_path}: {e}\n")
+            continue
 
-print(f"{feature_type.upper()} Feature extraction complete!")
+print(f"{feature_type.upper()} Feature extraction complete!")
