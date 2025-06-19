@@ -4,7 +4,7 @@
 import os
 import numpy as np
 import librosa
-from spafe.features.lfcc import lfcc
+from spafe.features.mfcc import lfcc
 from scipy.io import savemat
 from tqdm import tqdm
 
@@ -18,7 +18,7 @@ dataset_splits = {
     "test": "test"
 }
 
-feature_type = "lfcc"
+feature_type = "lfcc"  # Change as needed
 
 # ------------------ Feature Extraction ------------------
 feature_extractors = {
