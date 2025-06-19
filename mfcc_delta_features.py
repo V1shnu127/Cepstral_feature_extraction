@@ -50,7 +50,7 @@ for split_name, folder_name in dataset_splits.items():
 
     print(f"Processing {split_name.upper()} - Found {len(wav_files)} audio files.")
 
-    for file_path in tqdm(wav_files, desc=f"Extracting {feature_type.upper()} + base for {split_name.upper()}"):
+    for file_path in tqdm(wav_files, desc=f"Extracting {feature_type.upper()} + delta for {split_name.upper()}"):
         try:
             sig, fs = librosa.load(file_path, sr=16000)
 
